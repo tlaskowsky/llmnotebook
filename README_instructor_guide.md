@@ -14,10 +14,13 @@
 
 ## 事前準備チェックリスト
 
-- [ ] SageMakerインスタンス: **ml.g4dn.xlarge**（T4 GPU）推奨。lab1/lab2はCPUでも可、lab3はGPU推奨
+- [ ] インスタンスサイジング:
+  - **GPUあり**: ml.g4dn.xlarge（T4）推奨。lab3はQwen2.5-0.5B-Instructを使用（自動選択）
+  - **CPUのみ**: メモリ8GB以上（ml.m5.large以上）を推奨。lab3は軽量な llm-jp-3-150m-instruct3 に自動切り替え（約300MB / CPU訓練5〜15分）
+  - t3.medium等のメモリ4GB以下ではlab3のモデル読み込みでフリーズすることがある → `FORCE_SMALL_MODEL = True` を使用、それでも不安定ならインスタンスを上げる
 - [ ] カーネル: `conda_pytorch_p310`（ノートブックのメタデータに設定済み）
 - [ ] 事前に一度 `%pip install japanize-matplotlib transformers peft accelerate fastmcp` を実行してキャッシュしておくと当日が速い
-- [ ] lab3のQwenモデル（約1GB）を事前に一度ダウンロードしておく（HFキャッシュに残る）
+- [ ] lab3のモデルを事前に一度ダウンロードしておく（HFキャッシュに残る）: GPU環境ならQwen（約1GB）、CPU環境ならllm-jp（約300MB）
 - [ ] 受講者がFAQ生成に使う生成AI（Claude / ChatGPT等）へのアクセス手段を確認
 
 ## 期待される実行結果（検証済みチェックポイント）
@@ -32,6 +35,7 @@
 
 ## 既知の注意点・トラブルシューティング
 
+0. **lab3でカーネル/サーバが固まる**: 原因はほぼメモリ不足（モデル読み込み時のスワップ）。Kernel再起動 → `FORCE_SMALL_MODEL = True` で軽量モデルに切替。ダウンロードはHFキャッシュから再開されるのでやり直しにならない。根本対策はメモリ8GB以上のインスタンス。
 1. **japanize_matplotlib が無い**: lab0に救済セルあり（`%pip install japanize-matplotlib`）。インストール後は該当セルの再実行が必要。
 2. **transformers のバージョン**: lab3は `pip install -U` で v5系が入る前提。`dtype=` 引数を使用済み（旧 `torch_dtype` は非推奨）。
 3. **my_faq.txt の文字コード**: 受講者がWindowsでコピペしたファイルをアップロードするとShift-JISになることがある。ノートブックは `encoding='utf-8'` 固定なので、JupyterLab内の File → New → Text File で作らせるのが安全（手順に記載済み）。
